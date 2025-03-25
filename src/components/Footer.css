@@ -1,0 +1,17 @@
+.footer {
+  text-align: center;
+  background-color: white;
+  padding: 16px 20px;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.copyright {
+  color: #666;
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+  font-size: 14px;
+} 

@@ -1,0 +1,120 @@
+.point-items-container {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+
+.page-title {
+  margin-bottom: 8px !important;
+  color: #ff8c00;
+}
+
+.class-name {
+  font-size: 16px;
+  color: #666;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 300px;
+  font-size: 16px;
+  color: #999;
+}
+
+.point-items-content {
+  margin-bottom: 24px;
+}
+
+.category-card {
+  margin-bottom: 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
+  overflow: hidden;
+}
+
+.category-header {
+  display: flex;
+  align-items: center;
+}
+
+.category-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+.category-count {
+  margin-left: 8px;
+  font-size: 14px;
+  color: #999;
+}
+
+.form-buttons {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 24px;
+  margin-bottom: 0 !important;
+}
+
+/* 表格样式 */
+.ant-table-thead > tr > th {
+  background-color: #fafafa;
+  font-weight: bold;
+}
+
+.ant-table-tbody > tr:hover > td {
+  background-color: #f0f7ff !important;
+}
+
+/* 响应式布局 */
+@media (max-width: 768px) {
+  .point-items-container {
+    padding: 16px;
+  }
+  
+  .page-header {
+    flex-direction: column;
+  }
+  
+  .page-header > div:last-child {
+    margin-top: 16px;
+  }
+}
+
+/* 拖拽排序样式 */
+.draggable-row {
+  cursor: move;
+}
+
+.draggable-row.dragging {
+  background-color: #f0f7ff;
+  opacity: 0.7;
+}
+
+/* 批量操作按钮容器 */
+.batch-actions {
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* 应用到学生按钮效果 */
+.apply-button:hover {
+  color: #52c41a !important;
+}
+
+/* 卡片悬停效果 */
+.category-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  transition: box-shadow 0.3s;
+} 

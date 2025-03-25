@@ -1,0 +1,986 @@
+.class-detail-container {
+  padding: 20px 0;
+}
+
+.class-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.class-title {
+  color: #ff8c00 !important;
+  font-family: 'Comic Sans MS', cursive, sans-serif !important;
+  margin: 0 !important;
+}
+
+.class-description {
+  color: #666;
+  display: block;
+  margin-top: 5px;
+}
+
+.students-card {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.group-tabs {
+  margin-bottom: 15px;
+}
+
+.students-table {
+  margin-top: 10px;
+}
+
+.students-table .ant-table-thead > tr > th {
+  background-color: #fff8e6;
+  color: #ff8c00;
+  font-weight: bold;
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+}
+
+.students-table .ant-table-tbody > tr:hover > td {
+  background-color: #f0f7ff !important;
+  transition: background-color 0.2s;
+}
+
+.students-table .ant-table-row a {
+  color: #1890ff;
+  text-decoration: none;
+}
+
+.students-table .ant-table-row a:hover {
+  color: #40a9ff;
+  text-decoration: underline;
+}
+
+.ant-table-row-selected > td {
+  background-color: #fff8e6 !important;
+}
+
+.loading-container {
+  text-align: center;
+  padding: 50px 0;
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+  color: #666;
+}
+
+.action-button {
+  margin-right: 8px;
+}
+
+.form-buttons {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+  margin-bottom: 0 !important;
+}
+
+/* 排名样式 */
+.rank-1, .rank-2, .rank-3 {
+  font-weight: bold;
+}
+
+.rank-1 {
+  color: #ff4500;
+}
+
+.rank-2 {
+  color: #ff8c00;
+}
+
+.rank-3 {
+  color: #ffd700;
+}
+
+/* 小组标签样式 */
+.group-tag {
+  border-radius: 12px;
+  padding: 2px 8px;
+  font-size: 12px;
+  margin-right: 4px;
+}
+
+/* 随机抽取动画效果 - 增强版 */
+@keyframes highlight {
+  0% {
+    background-color: rgba(255, 255, 0, 0);
+  }
+  50% {
+    background-color: rgba(255, 255, 0, 0.4);
+  }
+  100% {
+    background-color: rgba(255, 255, 0, 0);
+  }
+}
+
+@keyframes spotlight {
+  0% {
+    box-shadow: 0 0 10px 5px rgba(255, 215, 0, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 20px 10px rgba(255, 215, 0, 0.7);
+  }
+  100% {
+    box-shadow: 0 0 10px 5px rgba(255, 215, 0, 0.2);
+  }
+}
+
+@keyframes scale {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes flash {
+  0% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.3;
+  }
+}
+
+.highlight-row {
+  animation: highlight 0.6s infinite;
+  transition: all 0.3s ease;
+}
+
+.result-row {
+  transition: all 0.5s ease;
+  animation: spotlight 1s ease-in-out 1;
+}
+
+/* 随机抽取模态框样式增强 */
+.random-pick-modal {
+  overflow: hidden !important;
+}
+
+.random-pick-modal .ant-modal-content {
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.random-pick-modal .ant-modal-header {
+  background: linear-gradient(135deg, #ffd700, #ff8c00);
+  border-bottom: none;
+  padding: 20px 24px;
+}
+
+.random-pick-modal .ant-modal-title {
+  color: white;
+  font-size: 20px;
+  font-weight: bold;
+  text-align: center;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.random-pick-modal .ant-modal-body {
+  padding: 24px;
+  background-color: #fff;
+}
+
+.random-pick-modal .ant-modal-footer {
+  border-top: none;
+  padding: 16px 24px 24px;
+  display: flex;
+  justify-content: center;
+}
+
+.random-pick-modal .ant-modal-footer button {
+  min-width: 120px;
+  height: 45px;
+  border-radius: 23px;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.random-pick-modal .ant-modal-footer button:last-child {
+  background: linear-gradient(135deg, #ff8c00, #ff4500);
+  border: none;
+  box-shadow: 0 5px 15px rgba(255, 69, 0, 0.4);
+  transition: all 0.3s ease;
+}
+
+.random-pick-modal .ant-modal-footer button:last-child:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 7px 20px rgba(255, 69, 0, 0.6);
+}
+
+/* 随机抽取容器增强 */
+.random-pick-container {
+  padding: 10px;
+}
+
+.random-pick-container .form-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  background-color: #f9f9f9;
+  border-radius: 10px;
+  padding: 12px 15px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.random-pick-container .form-item label {
+  width: 100px;
+  text-align: right;
+  margin-right: 15px;
+  font-weight: bold;
+  color: #555;
+}
+
+.random-pick-container .ant-divider {
+  margin: 24px 0;
+  color: #ff8c00;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.random-pick-container .ant-divider::before,
+.random-pick-container .ant-divider::after {
+  border-top-color: #ffcc80;
+}
+
+/* 抽奖结果容器 */
+.lottery-container {
+  position: relative;
+  min-height: 250px;
+  border-radius: 8px;
+  transition: all 0.5s ease;
+  margin: 0 auto;
+}
+
+.lottery-container.active {
+  background-color: rgba(255, 248, 230, 0.5);
+  box-shadow: 0 0 25px rgba(255, 140, 0, 0.3);
+}
+
+/* 抽奖结果表格 */
+.lottery-result-table {
+  position: relative;
+  z-index: 2;
+}
+
+.lottery-result-table .ant-table-thead > tr > th {
+  background-color: #fff8e6;
+  color: #ff8c00;
+  font-weight: bold;
+  text-align: center;
+  font-size: 16px;
+}
+
+.lottery-result-table .ant-table-tbody > tr > td {
+  text-align: center;
+  font-size: 16px;
+  transition: all 0.3s ease;
+}
+
+.lottery-result-table .student-name {
+  font-weight: bold;
+  font-size: 18px;
+  color: #333;
+}
+
+.lottery-result-table .total-points {
+  font-weight: bold;
+  color: #ff8c00;
+  font-size: 18px;
+}
+
+.lottery-empty {
+  margin: 50px 0;
+}
+
+.lottery-empty .empty-text {
+  font-size: 16px;
+  color: #999;
+}
+
+/* 抽奖动画元素 */
+.lottery-animation {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+}
+
+.lottery-light {
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.3) 0%, rgba(255, 215, 0, 0) 70%);
+  animation: scale 2s infinite ease-in-out;
+}
+
+.lottery-message {
+  position: relative;
+  color: #ff8c00;
+  font-size: 24px;
+  font-weight: bold;
+  text-shadow: 0 0 10px rgba(255, 140, 0, 0.5);
+  animation: flash 1.5s infinite ease-in-out;
+  z-index: 3;
+  margin-bottom: 100px;
+}
+
+/* 成功消息样式 */
+.lottery-success-message {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.lottery-success-message .ant-message-notice-content {
+  background: linear-gradient(135deg, #fff8e6, #ffefd5);
+  border-left: 4px solid #ff8c00;
+  padding: 12px 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 导入学生相关样式 */
+.import-instructions {
+  margin-bottom: 16px;
+}
+
+.import-instructions ul {
+  margin: 8px 0 8px 20px;
+}
+
+.preview-container {
+  margin-top: 16px;
+}
+
+.import-actions {
+  margin-top: 24px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* 全屏抽奖动画样式 */
+.lottery-fullscreen-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.9);
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: fadeIn 0.3s ease-in-out;
+  overflow: hidden;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.lottery-fullscreen-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  color: #fff;
+  overflow: hidden;
+}
+
+.lottery-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  position: relative;
+  z-index: 10;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.9), transparent);
+}
+
+.lottery-header h1 {
+  font-size: 36px;
+  font-weight: bold;
+  text-align: center;
+  color: #ffd700;
+  margin: 0 20px;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+}
+
+.lottery-trophy-icon {
+  font-size: 36px;
+  color: #ffd700;
+  animation: glow 2s infinite alternate;
+}
+
+@keyframes glow {
+  0% {
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+  }
+  100% {
+    text-shadow: 0 0 20px rgba(255, 215, 0, 1), 0 0 30px rgba(255, 215, 0, 0.8);
+  }
+}
+
+.close-fullscreen-btn {
+  position: absolute;
+  right: 20px;
+  top: 20px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 20px;
+  background: transparent;
+  border: none;
+}
+
+.close-fullscreen-btn:hover {
+  color: #fff;
+}
+
+/* 恢复滚动容器的基本样式并增强 */
+.lottery-rolling-container {
+  flex: 1;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  position: relative;
+  z-index: 1;
+  padding: 0 20px;
+  scroll-behavior: smooth;
+  height: 60vh;  /* 增加高度 */
+  transition: transform 0.1s ease; /* 添加平滑的变换效果 */
+  mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 1) 10%,
+    rgba(0, 0, 0, 1) 90%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 1) 10%,
+    rgba(0, 0, 0, 1) 90%,
+    rgba(0, 0, 0, 0) 100%
+  );
+}
+
+.lottery-rolling-container::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+.rolling-start-spacer, .rolling-end-spacer {
+  height: 25vh; /* 减小高度以显示更多内容 */
+}
+
+/* 减小学生项目的高度和间距 */
+.rolling-student-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 20px; /* 进一步减小内边距 */
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px; /* 减小圆角 */
+  margin: 3px 0; /* 减小外边距 */
+  transition: all 0.2s ease;
+  border-left: 4px solid transparent;
+  font-size: 20px; /* 减小字体 */
+  transform-origin: center;
+  animation: itemPulse 0.15s ease-in-out; /* 加快动画 */
+  line-height: 1.2; /* 减小行高 */
+}
+
+/* 恢复项目出现的脉冲动画 */
+@keyframes itemPulse {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.02);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.rolling-student-item:nth-child(odd) {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.rolling-student-item:hover {
+  background: rgba(255, 215, 0, 0.15);
+  transform: scale(1.02);
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+}
+
+/* 更吸引眼球的名字显示 */
+.rolling-student-name {
+  flex: 1;
+  text-align: center;
+  font-weight: bold;
+  font-size: 32px; /* 增大字体 */
+  color: #ffd700; /* 使用金色 */
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.8), 0 0 20px rgba(255, 215, 0, 0.5);
+  transition: all 0.3s ease;
+  margin: 0 10px;
+  animation: namePulse 1.5s infinite alternate, nameGlow 2s infinite alternate; /* 添加脉冲和发光动画 */
+  letter-spacing: 2px; /* 增加字间距 */
+  transform-origin: center;
+}
+
+/* 名字脉冲动画 */
+@keyframes namePulse {
+  0% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1.05);
+  }
+}
+
+/* 名字发光动画 */
+@keyframes nameGlow {
+  0% {
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.6), 0 0 20px rgba(255, 215, 0, 0.3);
+    color: #ffd700;
+  }
+  50% {
+    text-shadow: 0 0 15px rgba(255, 215, 0, 0.9), 0 0 30px rgba(255, 215, 0, 0.6);
+    color: #fff;
+  }
+  100% {
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.6), 0 0 20px rgba(255, 215, 0, 0.3);
+    color: #ffd700;
+  }
+}
+
+/* 减小学号显示大小 */
+.rolling-student-id {
+  font-family: 'Courier New', monospace;
+  color: #ffd700;
+  font-weight: bold;
+  min-width: 100px; /* 减小宽度 */
+  font-size: 18px; /* 减小字体大小 */
+  text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+  animation: textGlow 1.5s infinite alternate;
+}
+
+@keyframes textGlow {
+  from {
+    text-shadow: 0 0 2px rgba(255, 215, 0, 0.5);
+  }
+  to {
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+  }
+}
+
+.rolling-student-group {
+  opacity: 0.7;
+  font-size: 20px;
+  min-width: 120px;
+  text-align: right;
+}
+
+/* 更明显的聚光灯效果 */
+.lottery-spotlight {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 80px; /* 增加高度 */
+  pointer-events: none;
+  z-index: 5;
+}
+
+.spotlight-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 80px; /* 增加高度 */
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 215, 0, 0) 0%,
+    rgba(255, 215, 0, 0.3) 20%, /* 增强亮度 */
+    rgba(255, 215, 0, 0.6) 50%, /* 增强亮度 */
+    rgba(255, 215, 0, 0.3) 80%, /* 增强亮度 */
+    rgba(255, 215, 0, 0) 100%
+  );
+  box-shadow: 0 0 60px 20px rgba(255, 215, 0, 0.4); /* 增强光晕 */
+  animation: pulse 2s infinite, spotlightMove 3s infinite alternate; /* 添加移动效果 */
+  z-index: 2;
+}
+
+/* 添加聚光灯轻微移动的动画 */
+@keyframes spotlightMove {
+  0% {
+    height: 80px;
+    opacity: 0.9;
+  }
+  50% {
+    height: 85px;
+    opacity: 1;
+  }
+  100% {
+    height: 80px;
+    opacity: 0.9;
+  }
+}
+
+/* 增强脉冲动画效果 */
+@keyframes pulse {
+  0% {
+    opacity: 0.8;
+    box-shadow: 0 0 30px 10px rgba(255, 215, 0, 0.3);
+  }
+  50% {
+    opacity: 1;
+    box-shadow: 0 0 60px 20px rgba(255, 215, 0, 0.5);
+  }
+  100% {
+    opacity: 0.8;
+    box-shadow: 0 0 30px 10px rgba(255, 215, 0, 0.3);
+  }
+}
+
+/* 添加底部炫光效果 */
+.lottery-fullscreen-content::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100px;
+  background: linear-gradient(to top, rgba(255, 215, 0, 0.1), transparent);
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* 增强状态信息的动画效果 */
+.lottery-status {
+  position: absolute;
+  bottom: 30px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 28px; /* 增大字体 */
+  color: #ffd700;
+  font-weight: bold;
+  text-shadow: 0 0 15px rgba(255, 215, 0, 0.8); /* 增强光晕 */
+  animation: blink 1.2s infinite; /* 加快闪烁速度 */
+  z-index: 10;
+  letter-spacing: 2px; /* 增加字间距 */
+}
+
+/* 修改闪烁动画使其更加明显 */
+@keyframes blink {
+  0% {
+    opacity: 0.4;
+    transform: scale(0.98);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+  100% {
+    opacity: 0.4;
+    transform: scale(0.98);
+  }
+}
+
+/* 抽奖结果全屏样式 */
+.lottery-result-fullscreen {
+  padding: 20px;
+  text-align: center;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.lottery-result-fullscreen h2 {
+  color: #ffd700;
+  font-size: 36px;
+  margin-bottom: 30px;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.lottery-result-cards {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.result-student-card {
+  width: 280px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+  position: relative;
+  overflow: hidden;
+  animation: cardReveal 0.6s ease-out;
+  animation-fill-mode: backwards;
+  transition: all 0.3s ease;
+}
+
+.result-student-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0 30px rgba(255, 215, 0, 0.4);
+}
+
+@keyframes cardReveal {
+  from {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.result-student-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: #ffd700;
+  color: #333;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 36px;
+  font-weight: bold;
+  margin-bottom: 15px;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.2);
+}
+
+.result-student-info {
+  width: 100%;
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.result-student-name {
+  font-size: 26px;
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #fff;
+}
+
+.result-student-id {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 5px;
+  font-family: 'Courier New', monospace;
+}
+
+.result-student-group {
+  font-size: 14px;
+  color: #ffd700;
+  padding: 2px 8px;
+  background: rgba(255, 215, 0, 0.2);
+  border-radius: 10px;
+  display: inline-block;
+}
+
+.result-student-points {
+  background: rgba(255, 215, 0, 0.2);
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.result-student-points span {
+  font-size: 32px;
+  font-weight: bold;
+  color: #ffd700;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.result-student-points small {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* 动态延迟显示卡片效果 */
+.result-student-card:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.result-student-card:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+.result-student-card:nth-child(4) {
+  animation-delay: 0.6s;
+}
+
+.result-student-card:nth-child(5) {
+  animation-delay: 0.8s;
+}
+
+.result-student-card:nth-child(n+6) {
+  animation-delay: 1s;
+}
+
+/* 彩色纸屑效果 */
+.result-confetti {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  pointer-events: none;
+  background-image: 
+    radial-gradient(circle, rgba(255, 215, 0, 0.2) 8%, transparent 8%),
+    radial-gradient(circle, rgba(255, 215, 0, 0.2) 3%, transparent 3%),
+    radial-gradient(circle, rgba(255, 0, 0, 0.2) 5%, transparent 5%),
+    radial-gradient(circle, rgba(0, 255, 0, 0.2) 6%, transparent 6%),
+    radial-gradient(circle, rgba(0, 0, 255, 0.2) 4%, transparent 4%);
+  background-size: 600px 600px;
+  animation: confettiFall 30s linear infinite;
+}
+
+@keyframes confettiFall {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 600px 600px;
+  }
+}
+
+/* 响应式样式 */
+@media (max-width: 768px) {
+  .lottery-header h1 {
+    font-size: 24px;
+  }
+  
+  .rolling-student-item {
+    padding: 10px 15px;
+    font-size: 18px;
+  }
+  
+  .rolling-student-name {
+    font-size: 20px;
+  }
+  
+  .rolling-student-id, .rolling-student-group {
+    font-size: 16px;
+  }
+  
+  .result-student-card {
+    width: 230px;
+    padding: 15px;
+  }
+  
+  .result-student-avatar {
+    width: 60px;
+    height: 60px;
+    font-size: 24px;
+  }
+  
+  .result-student-name {
+    font-size: 20px;
+  }
+}
+
+/* 抽奖结果表格中的积分管理按钮 */
+.lottery-result-table .ant-btn {
+  background-color: #52c41a;
+  border-color: #52c41a;
+}
+
+.lottery-result-table .ant-btn:hover,
+.lottery-result-table .ant-btn:focus {
+  background-color: #73d13d;
+  border-color: #73d13d;
+}
+
+/* 全屏结果卡片中的积分管理按钮 */
+.result-student-points-btn {
+  display: block;
+  margin-top: 10px;
+  width: 100%;
+  background-color: #52c41a !important;
+  border-color: #52c41a !important;
+  transition: all 0.3s ease;
+  animation: pointsBtnPulse 2s infinite;
+}
+
+.result-student-points-btn:hover,
+.result-student-points-btn:focus {
+  background-color: #73d13d !important;
+  border-color: #73d13d !important;
+  transform: scale(1.05);
+}
+
+@keyframes pointsBtnPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(82, 196, 26, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(82, 196, 26, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(82, 196, 26, 0);
+  }
+}
+
+/* 结果学生卡片样式调整 */
+.result-student-card {
+  padding-bottom: 15px;
+} 

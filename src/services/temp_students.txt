@@ -1,0 +1,11 @@
+// 默认模拟学生数据
+const defaultMockStudents: MockStudent[] = [
+  {
+    id: 'student_1',
+    studentId: 1001,
+    name: '张三',
+    classId: 'class_1',
+    group: '第一组',
+    points: { discipline: 80, hygiene: 90, academic: 85, other: 70 },
+    exchangeCoins: 0,
+  }

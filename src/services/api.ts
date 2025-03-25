@@ -1,0 +1,856 @@
+import axios from 'axios';
+
+// 兑换记录接口定义
+interface ExchangeRecord {
+  id: string;
+  studentId: string;
+  studentName: string;
+  rewardId: string;
+  rewardName: string;
+  coins: number;
+  date: string;
+  classId: string;
+}
+
+// 当设置为true时使用模拟数据而不是真实API
+const USE_MOCK_DATA = true;
+
+// 从localStorage加载持久化数据或使用默认数据
+const loadPersistedData = () => {
+  try {
+    const persistedData = localStorage.getItem('mockAppData');
+    if (persistedData) {
+      const parsedData = JSON.parse(persistedData);
+      return {
+        mockClasses: parsedData.mockClasses || defaultMockClasses,
+        mockStudents: parsedData.mockStudents || defaultMockStudents,
+        mockPointLogs: parsedData.mockPointLogs || defaultMockPointLogs,
+        mockRewards: parsedData.mockRewards || defaultMockRewards,
+        mockExchangeRecords: parsedData.mockExchangeRecords || [],
+      };
+    }
+  } catch (error) {
+    console.error('Failed to load persisted data:', error);
+  }
+  
+  // 返回默认数据
+  return {
+    mockClasses: defaultMockClasses,
+    mockStudents: defaultMockStudents, 
+    mockPointLogs: defaultMockPointLogs,
+    mockRewards: defaultMockRewards,
+    mockExchangeRecords: [],
+  };
+};
+
+// 持久化存储数据到localStorage
+export const persistData = () => {
+  try {
+    const dataToStore = {
+      mockClasses,
+      mockStudents,
+      mockPointLogs,
+      mockRewards,
+      mockExchangeRecords,
+    };
+    localStorage.setItem('mockAppData', JSON.stringify(dataToStore));
+  } catch (error) {
+    console.error('Failed to persist data:', error);
+  }
+};
+
+// 默认模拟班级数据
+const defaultMockClasses = [
+  {
+    id: 'class_1',
+    name: '初三一班',
+    description: '示例班级 - 初三一班',
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'class_2',
+    name: '初三二班',
+    description: '示例班级 - 初三二班',
+    createdAt: new Date(Date.now() - 86400000).toISOString(),
+  }
+];
+
+// 默认模拟学生数据
+const defaultMockStudents: MockStudent[] = [
+  {
+    id: 'student_1',
+    studentId: 1001,
+    name: '张三',
+    classId: 'class_1',
+    group: '第一组',
+    points: { discipline: 80, hygiene: 90, academic: 85, other: 70 },
+    exchangeCoins: 0,
+  },
+  {
+    id: 'student_2',
+    studentId: 1002,
+    name: '李四',
+    classId: 'class_1',
+    group: '第二组',
+    points: { discipline: 85, hygiene: 75, academic: 90, other: 80 },
+    exchangeCoins: 0,
+  },
+  {
+    id: 'student_3',
+    studentId: 1003,
+    name: '王五',
+    classId: 'class_2',
+    group: '第一组',
+    points: { discipline: 70, hygiene: 85, academic: 80, other: 75 },
+    exchangeCoins: 0,
+  }
+];
+
+// 默认点数记录
+const defaultMockPointLogs: any[] = [
+  {
+    id: 'log_1',
+    studentId: 'student_1',
+    category: 'discipline',
+    points: 5,
+    reason: '课堂表现良好',
+    actionType: 'add',
+    createdAt: new Date(Date.now() - 3600000).toISOString(),
+  },
+  {
+    id: 'log_2',
+    studentId: 'student_2',
+    category: 'academic',
+    points: 10,
+    reason: '测验成绩优秀',
+    actionType: 'add',
+    createdAt: new Date(Date.now() - 7200000).toISOString(),
+  }
+];
+
+// 默认奖励数据
+const defaultMockRewards = [
+  { id: 'reward_1', name: '文具套装', coins: 50, description: '包含笔、橡皮、尺子等', stock: 10, exchangeCount: 0 },
+  { id: 'reward_2', name: '课外书籍', coins: 100, description: '精选青少年读物', stock: 5, exchangeCount: 0 },
+  { id: 'reward_3', name: '班级特权', coins: 200, description: '一周值日免除', stock: 3, exchangeCount: 0 },
+];
+
+// 初始化数据（从localStorage或默认值）
+const persistedData = loadPersistedData();
+let mockClasses = persistedData.mockClasses;
+let mockStudents = persistedData.mockStudents;
+let mockPointLogs = persistedData.mockPointLogs;
+let mockRewards = persistedData.mockRewards;
+let mockExchangeRecords: ExchangeRecord[] = persistedData.mockExchangeRecords;
+
+// 基础API URL
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+
+// 创建axios实例
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// 请求拦截器，添加token
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// 响应拦截器，处理token过期等情况
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // 如果响应状态码为401（未授权），自动跳转到登录页面
+    if (error.response && error.response.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('userInfo');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
+// 模拟延迟
+const mockDelay = (ms = 500) => new Promise(resolve => setTimeout(resolve, ms));
+
+// 生成模拟响应
+const mockResponse = (data: any) => {
+  return {
+    data,
+    status: 200,
+    statusText: 'OK',
+    headers: {},
+    config: {},
+  };
+};
+
+// 用户相关API
+export const userAPI = {
+  // 用户注册
+  register: async (userData: { name: string; email: string; password: string }) => {
+    if (USE_MOCK_DATA) {
+      await mockDelay();
+      const mockUser = {
+        id: `user_${Date.now()}`,
+        name: userData.name,
+        email: userData.email,
+      };
+      return mockResponse({ 
+        user: mockUser, 
+        token: `mock_token_${Date.now()}` 
+      });
+    }
+    return api.post('/users', userData);
+  },
+  
+  // 用户登录
+  login: async (credentials: { email: string; password: string }) => {
+    if (USE_MOCK_DATA) {
+      await mockDelay();
+      // 模拟简单验证逻辑
+      if (credentials.email === 'demo@example.com' && credentials.password === 'password') {
+        return mockResponse({
+          user: {
+            id: 'mock_user_id',
+            name: 'Demo User',
+            email: credentials.email,
+          },
+          token: `mock_token_${Date.now()}`
+        });
+      } else {
+        throw {
+          response: {
+            status: 401,
+            data: { message: '邮箱或密码不正确' }
+          }
+        };
+      }
+    }
+    return api.post('/users/login', credentials);
+  },
+  
+  // 获取用户信息
+  getProfile: async () => {
+    if (USE_MOCK_DATA) {
+      await mockDelay();
+      return mockResponse({
+        id: 'mock_user_id',
+        name: 'Demo User',
+        email: 'demo@example.com',
+      });
+    }
+    return api.get('/users/profile');
+  },
+};
+
+// 班级相关API
+export const classAPI = {
+  // 创建班级
+  createClass: async (classData: { name: string; description?: string }) => {
+    if (USE_MOCK_DATA) {
+      await mockDelay();
+      const newClass = {
+        id: `class_${Date.now()}`,
+        name: classData.name,
+        description: classData.description || '',
+        createdAt: new Date().toISOString(),
+      };
+      mockClasses.push(newClass);
+      return mockResponse(newClass);
+    }
+    return api.post('/classes', classData);
+  },
+  
+  // 获取所有班级
+  getClasses: async () => {
+    if (USE_MOCK_DATA) {
+      await mockDelay();
+      return mockResponse(mockClasses);
+    }
+    return api.get('/classes');
+  },
+  
+  // 获取单个班级
+  getClassById: async (id: string) => {
+    if (USE_MOCK_DATA) {
+      await mockDelay();
+      const foundClass = mockClasses.find((c: any) => c.id === id);
+      if (foundClass) {
+        return mockResponse(foundClass);
+      }
+      throw {
+        response: {
+          status: 404,
+          data: { message: '班级不存在' }
+        }
+      };
+    }
+    return api.get(`/classes/${id}`);
+  },
+  
+  // 更新班级
+  updateClass: async (id: string, classData: { name?: string; description?: string }) => {
+    if (USE_MOCK_DATA) {
+      await mockDelay();
+      const classIndex = mockClasses.findIndex((c: any) => c.id === id);
+      if (classIndex >= 0) {
+        mockClasses[classIndex] = {
+          ...mockClasses[classIndex],
+          ...classData,
+        };
+        return mockResponse(mockClasses[classIndex]);
+      }
+      throw {
+        response: {
+          status: 404,
+          data: { message: '班级不存在' }
+        }
+      };
+    }
+    return api.put(`/classes/${id}`, classData);
+  },
+  
+  // 删除班级
+  deleteClass: async (id: string) => {
+    if (USE_MOCK_DATA) {
+      await mockDelay();
+      const classIndex = mockClasses.findIndex((c: any) => c.id === id);
+      if (classIndex >= 0) {
+        mockClasses = mockClasses.filter((c: any) => c.id !== id);
+        return mockResponse({ message: '班级删除成功' });
+      }
+      throw {
+        response: {
+          status: 404,
+          data: { message: '班级不存在' }
+        }
+      };
+    }
+    return api.delete(`/classes/${id}`);
+  },
+};
+
+// 模拟学生数据
+interface MockStudent {
+  id: string;
+  studentId: number;
+  name: string;
+  classId: string;
+  group?: string;
+  points: {
+    discipline: number;
+    hygiene: number;
+    academic: number;
+    other: number;
+  };
+  exchangeCoins: number;
+}
+
+// 学生相关API
+export const studentAPI = {
+  // 获取模拟学生数据 - 为了支持外部直接访问
+  getMockStudents: () => {
+    return mockStudents;
+  },
+  
+  // 更新模拟学生数据 - 为了支持外部直接更新
+  updateMockStudents: (newStudents: MockStudent[]) => {
+    mockStudents = newStudents;
+  },
+  
+  // 创建学生
+  createStudent: async (studentData: { 
+    studentId: number; 
+    name: string; 
+    classId: string; 
+    group?: string;
+    points?: {
+      discipline: number;
+      hygiene: number;
+      academic: number;
+      other: number;
+    }
+  }) => {
+    if (USE_MOCK_DATA) {
+      await mockDelay();
+      const newStudent: MockStudent = {
+        id: `student_${Date.now()}`,
+        studentId: studentData.studentId,
+        name: studentData.name,
+        classId: studentData.classId,
+        points: studentData.points || {
+          discipline: 0,
+          hygiene: 0,
+          academic: 0,
+          other: 0,
+        },
+        group: studentData.group,
+        exchangeCoins: 0,
+      };
+      
+      mockStudents.push(newStudent);
+      persistData(); // 持久化数据
+      return mockResponse(newStudent);
+    }
+    return api.post('/students', studentData);
+  },
+  
+  // 获取班级内的所有学生
+  getStudentsByClass: async (classId: string) => {
+    if (USE_MOCK_DATA) {
+      await mockDelay();
+      const classStudents = mockStudents.filter((s: any) => s.classId === classId);
+      return mockResponse(classStudents);
+    }
+    return api.get(`/students/class/${classId}`);
+  },
+  
+  // 获取单个学生
+  getStudentById: async (id: string) => {
+    if (USE_MOCK_DATA) {
+      await mockDelay();
+      const student = mockStudents.find((s: any) => s.id === id);
+      if (student) {
+        return mockResponse(student);
+      }
+      throw {
+        response: {
+          status: 404,
+          data: { message: '学生不存在' }
+        }
+      };
+    }
+    return api.get(`/students/${id}`);
+  },
+  
+  // 更新学生信息
+  updateStudent: async (id: string, studentData: { 
+    name?: string; 
+    studentId?: number;
+    group?: string;
+  }) => {
+    if (USE_MOCK_DATA) {
+      await mockDelay();
+      const studentIndex = mockStudents.findIndex((s: any) => s.id === id);
+      if (studentIndex >= 0) {
+        mockStudents[studentIndex] = {
+          ...mockStudents[studentIndex],
+          ...studentData,
+        };
+        persistData(); // 持久化数据
+        return mockResponse(mockStudents[studentIndex]);
+      }
+      throw {
+        response: {
+          status: 404,
+          data: { message: '学生不存在' }
+        }
+      };
+    }
+    return api.put(`/students/${id}`, studentData);
+  },
+  
+  // 删除学生
+  deleteStudent: async (id: string) => {
+    if (USE_MOCK_DATA) {
+      await mockDelay();
+      const studentIndex = mockStudents.findIndex((s: any) => s.id === id);
+      if (studentIndex >= 0) {
+        mockStudents = mockStudents.filter((s: any) => s.id !== id);
+        mockPointLogs = mockPointLogs.filter((log: any) => log.studentId !== id);
+        persistData(); // 持久化数据
+        return mockResponse({ message: '学生删除成功' });
+      }
+      throw {
+        response: {
+          status: 404,
+          data: { message: '学生不存在' }
+        }
+      };
+    }
+    return api.delete(`/students/${id}`);
+  },
+  
+  // 更新学生积分
+  updateStudentPoints: async (id: string, pointData: {
+    category: 'discipline' | 'hygiene' | 'academic' | 'other';
+    points: number;
+    reason: string;
+    actionType: 'add' | 'subtract';
+  }) => {
+    if (USE_MOCK_DATA) {
+      await mockDelay();
+      const studentIndex = mockStudents.findIndex((s: any) => s.id === id);
+      if (studentIndex >= 0) {
+        const student = mockStudents[studentIndex];
+        const { category, points, actionType } = pointData;
+        
+        // 更新学生积分
+        if (actionType === 'add') {
+          student.points[category] += points;
+        } else {
+          student.points[category] = Math.max(0, student.points[category] - points);
+        }
+        
+        // 记录积分变更
+        const newLog = {
+          id: `log_${Date.now()}`,
+          studentId: id,
+          category,
+          points,
+          reason: pointData.reason,
+          actionType,
+          createdAt: new Date().toISOString(),
+        };
+        mockPointLogs.push(newLog);
+        
+        persistData(); // 持久化数据
+        return mockResponse({
+          student,
+          log: newLog,
+        });
+      }
+      throw {
+        response: {
+          status: 404,
+          data: { message: '学生不存在' }
+        }
+      };
+    }
+    return api.post(`/students/${id}/points`, pointData);
+  },
+  
+  // 批量更新学生积分
+  batchUpdatePoints: async (classId: string, pointData: {
+    category: 'discipline' | 'hygiene' | 'academic' | 'other';
+    points: number;
+    reason: string;
+    actionType: 'add' | 'subtract';
+    studentIds: string[];
+  }) => {
+    if (USE_MOCK_DATA) {
+      await mockDelay();
+      const { category, points, reason, actionType, studentIds } = pointData;
+      
+      // 更新每个学生的积分
+      const updatedStudents = [];
+      const newLogs = [];
+      
+      for (const studentId of studentIds) {
+        const studentIndex = mockStudents.findIndex((s: any) => s.id === studentId);
+        if (studentIndex >= 0) {
+          const student = mockStudents[studentIndex];
+          
+          // 更新学生积分
+          if (actionType === 'add') {
+            student.points[category] += points;
+          } else {
+            student.points[category] = Math.max(0, student.points[category] - points);
+          }
+          
+          updatedStudents.push(student);
+          
+          // 记录积分变更
+          const newLog = {
+            id: `log_${Date.now()}_${studentId}`,
+            studentId,
+            category,
+            points,
+            reason,
+            actionType,
+            createdAt: new Date().toISOString(),
+          };
+          mockPointLogs.push(newLog);
+          newLogs.push(newLog);
+        }
+      }
+      
+      persistData(); // 持久化数据
+      return mockResponse({
+        students: updatedStudents,
+        logs: newLogs,
+      });
+    }
+    return api.post(`/students/class/${classId}/points/batch`, pointData);
+  },
+  
+  // 获取学生的积分变动记录
+  getStudentPointLogs: async (studentId: string) => {
+    if (USE_MOCK_DATA) {
+      await mockDelay();
+      
+      // 创建随机日志数据
+      const mockLogs = [];
+      const categories = ['discipline', 'hygiene', 'academic', 'other'];
+      const actionTypes = ['add', 'subtract'];
+      
+      // 生成过去30天的随机日志数据
+      for (let i = 0; i < 20; i++) {
+        const category = categories[Math.floor(Math.random() * categories.length)];
+        const actionType = actionTypes[Math.floor(Math.random() * actionTypes.length)];
+        const points = actionType === 'add' 
+          ? Math.floor(Math.random() * 10) + 1
+          : -(Math.floor(Math.random() * 5) + 1);
+          
+        // 创建随机日期，最近30天内
+        const date = new Date();
+        date.setDate(date.getDate() - Math.floor(Math.random() * 30));
+        
+        mockLogs.push({
+          id: `log_${Date.now()}_${i}`,
+          studentId,
+          category,
+          pointItem: `${category}_item_${Math.floor(Math.random() * 3) + 1}`,
+          points,
+          reason: actionType === 'add' ? `${category}表现优秀` : `${category}需要改进`,
+          actionType,
+          createdAt: date.toISOString(),
+          operator: '系统管理员'
+        });
+      }
+      
+      // 按时间排序，最新的在前面
+      mockLogs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      
+      return mockResponse(mockLogs);
+    }
+    
+    return api.get(`/students/${studentId}/points/logs`);
+  },
+  
+  // 获取班级内所有学生积分排名
+  getClassPointsRanking: async (classId: string, params?: {
+    limit?: number;
+    category?: 'discipline' | 'hygiene' | 'academic' | 'other' | 'total';
+  }) => {
+    if (USE_MOCK_DATA) {
+      await mockDelay();
+      let students = mockStudents.filter((s: any) => s.classId === classId);
+      
+      // 计算学生总分
+      const studentsWithTotalPoints = students.map((student: any) => {
+        const totalPoints = 
+          student.points.discipline + 
+          student.points.hygiene + 
+          student.points.academic + 
+          student.points.other;
+        return {
+          ...student,
+          totalPoints
+        };
+      });
+      
+      // 根据类别排序
+      const category = params?.category || 'total';
+      studentsWithTotalPoints.sort((a: any, b: any) => {
+        if (category === 'total') {
+          return b.totalPoints - a.totalPoints;
+        } else {
+          return b.points[category] - a.points[category];
+        }
+      });
+      
+      // 应用分页
+      const limit = params?.limit || studentsWithTotalPoints.length;
+      const ranking = studentsWithTotalPoints.slice(0, limit);
+      
+      return mockResponse(ranking);
+    }
+    return api.get(`/students/class/${classId}/ranking`, { params });
+  },
+  
+  // 模拟兑换记录
+  mockExchanges: [],
+  
+  // 兑换奖励
+  exchangeReward: async (id: string, exchangeData: {
+    rewardId: string;
+    coins: number;
+    description: string;
+  }) => {
+    if (USE_MOCK_DATA) {
+      await mockDelay();
+      const student = mockStudents.find((s: any) => s.id === id);
+      if (!student) {
+        throw {
+          response: {
+            status: 404,
+            data: { message: '学生不存在' }
+          }
+        };
+      }
+      
+      // 创建兑换记录
+      const exchange = {
+        id: `exchange_${Date.now()}`,
+        studentId: id,
+        rewardId: exchangeData.rewardId,
+        coins: exchangeData.coins,
+        description: exchangeData.description,
+        createdAt: new Date().toISOString(),
+      };
+      
+      // @ts-ignore
+      studentAPI.mockExchanges.push(exchange);
+      
+      return mockResponse(exchange);
+    }
+    return api.post(`/students/${id}/exchange`, exchangeData);
+  },
+  
+  // 获取兑换记录
+  getExchangeHistory: async (id: string, params?: {
+    limit?: number;
+    page?: number;
+  }) => {
+    if (USE_MOCK_DATA) {
+      await mockDelay();
+      // @ts-ignore
+      let exchanges = studentAPI.mockExchanges.filter(e => e.studentId === id);
+      
+      // 排序: 按创建时间降序
+      type ExchangeRecord = {createdAt: string; [key: string]: any};
+      exchanges.sort((a, b) => {
+        const aDate = new Date((a as ExchangeRecord).createdAt).getTime();
+        const bDate = new Date((b as ExchangeRecord).createdAt).getTime();
+        return bDate - aDate;
+      });
+      
+      // 分页
+      const page = params?.page || 1;
+      const limit = params?.limit || 10;
+      const start = (page - 1) * limit;
+      const end = start + limit;
+      const paginatedExchanges = exchanges.slice(start, end);
+      
+      return mockResponse({
+        exchanges: paginatedExchanges,
+        total: exchanges.length,
+        page,
+        pages: Math.ceil(exchanges.length / limit),
+      });
+    }
+    return api.get(`/students/${id}/exchange`, { params });
+  },
+  
+  // 从班级界面兑换奖励
+  exchangeRewardFromClass: async (data: {
+    studentId: string;
+    rewardId: string;
+    classId: string;
+  }) => {
+    if (USE_MOCK_DATA) {
+      await mockDelay();
+      
+      // 查找学生
+      const student = mockStudents.find((s: any) => s.id === data.studentId);
+      if (!student) {
+        throw {
+          response: {
+            status: 404,
+            data: { message: '学生不存在' }
+          }
+        };
+      }
+      
+      // 查找奖励
+      const reward = mockRewards.find((r: any) => r.id === data.rewardId);
+      if (!reward) {
+        throw {
+          response: {
+            status: 404,
+            data: { message: '奖励不存在' }
+          }
+        };
+      }
+      
+      // 检查库存
+      if (reward.stock <= 0) {
+        throw {
+          response: {
+            status: 400,
+            data: { message: '奖励库存不足' }
+          }
+        };
+      }
+      
+      // 检查学生兑换币是否足够
+      if (student.exchangeCoins < reward.coins) {
+        throw {
+          response: {
+            status: 400,
+            data: { message: '学生兑换币不足' }
+          }
+        };
+      }
+      
+      // 更新学生兑换币
+      student.exchangeCoins -= reward.coins;
+      
+      // 更新奖励库存和兑换次数
+      reward.stock -= 1;
+      reward.exchangeCount += 1;
+      
+      // 创建兑换记录
+      const exchangeRecord = {
+        id: `exchange_${Date.now()}`,
+        studentId: student.id,
+        studentName: student.name,
+        rewardId: reward.id,
+        rewardName: reward.name,
+        coins: reward.coins,
+        date: new Date().toISOString(),
+        classId: data.classId
+      };
+      
+      // 添加到兑换记录
+      mockExchangeRecords.push(exchangeRecord);
+      
+      persistData(); // 持久化数据
+      return mockResponse({
+        success: true,
+        student,
+        reward,
+        exchange: exchangeRecord
+      });
+    }
+    
+    return api.post('/exchanges', data);
+  },
+  
+  // 获取班级兑换记录
+  getClassExchangeRecords: async (classId: string) => {
+    if (USE_MOCK_DATA) {
+      await mockDelay();
+      
+      // 过滤该班级的兑换记录
+      const records = mockExchangeRecords.filter(record => record.classId === classId);
+      
+      // 排序: 按创建时间降序
+      records.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      
+      return mockResponse(records);
+    }
+    
+    return api.get(`/classes/${classId}/exchanges`);
+  },
+};
+
+// 导出API
+export default {
+  userAPI,
+  classAPI,
+  studentAPI,
+}; 
