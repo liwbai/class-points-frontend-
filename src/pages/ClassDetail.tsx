@@ -23,7 +23,8 @@ import {
   Divider,
   Radio,
   FormInstance,
-  Empty
+  Empty,
+  Checkbox
 } from 'antd';
 import {
   PlusOutlined,
@@ -44,7 +45,8 @@ import {
   UploadOutlined,
   DownloadOutlined,
   FullscreenOutlined,
-  TrophyFilled
+  TrophyFilled,
+  InboxOutlined
 } from '@ant-design/icons';
 import { classAPI, studentAPI } from '../services/api';
 import './ClassDetail.css';
@@ -165,6 +167,8 @@ const ClassDetail: React.FC = () => {
   const [fullscreenMode, setFullscreenMode] = useState<boolean>(false);
   const [rollingStudents, setRollingStudents] = useState<StudentData[]>([]);
   const fullscreenRef = useRef<HTMLDivElement>(null);
+  // 在state声明区添加一个新的状态
+  const [overrideExisting, setOverrideExisting] = useState<boolean>(false);
 
   // 积分项目的定义
   const pointItemOptions = {
@@ -803,11 +807,15 @@ const ClassDetail: React.FC = () => {
           
           // 批量添加学生
           let successCount = 0;
+          let updatedCount = 0;
           let errorCount = 0;
           
           if (USE_MOCK_DATA) {
             // 模拟数据模式下的处理
             await mockDelay(1000);
+            
+            // 获取现有的学生数据，创建查找映射
+            const existingStudentMap = new Map(students.map(s => [s.studentId, s]));
             
             // 创建新的模拟学生数据
             const newStudents = [...students];
@@ -819,31 +827,47 @@ const ClassDetail: React.FC = () => {
                 const group = String(item.group || item['分组'] || '');
                 
                 // 检查学号是否已存在
-                const exists = students.some(s => s.studentId === studentId);
+                const existingStudent = existingStudentMap.get(studentId);
                 
-                if (!exists) {
-                  // 处理积分信息
-                  let disciplinePoints = Number(item['纪律分'] || item.discipline || 0);
-                  let hygienePoints = Number(item['卫生分'] || item.hygiene || 0);
-                  let academicPoints = Number(item['学术分'] || item.academic || 0);
-                  let otherPoints = Number(item['其他分'] || item.other || 0);
+                // 处理积分信息
+                let disciplinePoints = Number(item['纪律分'] || item.discipline || 0);
+                let hygienePoints = Number(item['卫生分'] || item.hygiene || 0);
+                let academicPoints = Number(item['学术分'] || item.academic || 0);
+                let otherPoints = Number(item['其他分'] || item.other || 0);
+                
+                // 如果提供了总积分但没有细分积分，则平均分配
+                const totalPointsFromFile = Number(item['总积分'] || item.totalPoints || 0);
+                if (totalPointsFromFile > 0 && 
+                   (disciplinePoints === 0 && hygienePoints === 0 && 
+                    academicPoints === 0 && otherPoints === 0)) {
+                  // 平均分配总积分到四个类别
+                  const pointsPerCategory = Math.floor(totalPointsFromFile / 4);
+                  const remainder = totalPointsFromFile % 4;
                   
-                  // 如果提供了总积分但没有细分积分，则平均分配
-                  const totalPointsFromFile = Number(item['总积分'] || item.totalPoints || 0);
-                  if (totalPointsFromFile > 0 && 
-                     (disciplinePoints === 0 && hygienePoints === 0 && 
-                      academicPoints === 0 && otherPoints === 0)) {
-                    // 平均分配总积分到四个类别
-                    const pointsPerCategory = Math.floor(totalPointsFromFile / 4);
-                    const remainder = totalPointsFromFile % 4;
-                    
-                    disciplinePoints = pointsPerCategory + (remainder > 0 ? 1 : 0);
-                    hygienePoints = pointsPerCategory + (remainder > 1 ? 1 : 0);
-                    academicPoints = pointsPerCategory + (remainder > 2 ? 1 : 0);
-                    otherPoints = pointsPerCategory;
-                  }
+                  disciplinePoints = pointsPerCategory + (remainder > 0 ? 1 : 0);
+                  hygienePoints = pointsPerCategory + (remainder > 1 ? 1 : 0);
+                  academicPoints = pointsPerCategory + (remainder > 2 ? 1 : 0);
+                  otherPoints = pointsPerCategory;
+                }
+                
+                if (existingStudent && overrideExisting) {
+                  // 更新已存在的学生
+                  existingStudent.name = name;
+                  existingStudent.group = group;
+                  existingStudent.points = {
+                    discipline: disciplinePoints,
+                    hygiene: hygienePoints,
+                    academic: academicPoints,
+                    other: otherPoints
+                  };
                   
-                  // 创建新学生，包含积分信息
+                  // 更新兑换积分
+                  existingStudent.exchangeCoins = 
+                    disciplinePoints + hygienePoints + academicPoints + otherPoints;
+                  
+                  updatedCount++;
+                } else if (!existingStudent) {
+                  // 创建新学生
                   const newStudent: StudentData = {
                     id: `student_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`,
                     studentId: studentId,
@@ -868,6 +892,7 @@ const ClassDetail: React.FC = () => {
                   newStudents.push(newStudent);
                   successCount++;
                 } else {
+                  // 学生存在但不覆盖
                   errorCount++;
                 }
               } catch (err) {
@@ -908,8 +933,25 @@ const ClassDetail: React.FC = () => {
             
           } else {
             // 真实API调用
+            
+            // 获取当前班级所有学生
+            const existingStudents = await studentAPI.getStudentsByClass(id!);
+            const existingStudentMap = new Map(
+              existingStudents && Array.isArray(existingStudents) 
+                ? existingStudents.map((s: any) => [s.studentId, s])
+                : []
+            );
+            
+            // 处理每个学生数据
             for (const item of jsonData as any[]) {
               try {
+                const studentId = Number(item.studentId || item['学号']);
+                const name = String(item.name || item['姓名']);
+                const group = String(item.group || item['分组'] || '');
+                
+                // 检查学号是否已存在
+                const existingStudent = existingStudentMap.get(studentId);
+                
                 // 处理积分信息
                 let disciplinePoints = Number(item['纪律分'] || item.discipline || 0);
                 let hygienePoints = Number(item['卫生分'] || item.hygiene || 0);
@@ -931,19 +973,39 @@ const ClassDetail: React.FC = () => {
                   otherPoints = pointsPerCategory;
                 }
                 
-                await studentAPI.createStudent({
-                  studentId: Number(item.studentId || item['学号']),
-                  name: String(item.name || item['姓名']),
-                  classId: id!,
-                  group: String(item.group || item['分组'] || ''),
-                  points: {
-                    discipline: disciplinePoints,
-                    hygiene: hygienePoints,
-                    academic: academicPoints,
-                    other: otherPoints
-                  }
-                });
-                successCount++;
+                if (existingStudent && overrideExisting) {
+                  // 更新已存在的学生
+                  await studentAPI.updateStudent(existingStudent.id, {
+                    name,
+                    studentId,
+                    group,
+                    points: {
+                      discipline: disciplinePoints,
+                      hygiene: hygienePoints,
+                      academic: academicPoints,
+                      other: otherPoints
+                    }
+                  } as any); // 使用类型断言暂时解决类型不匹配问题
+                  updatedCount++;
+                } else if (!existingStudent) {
+                  // 创建新学生
+                  await studentAPI.createStudent({
+                    studentId,
+                    name,
+                    classId: id!,
+                    group,
+                    points: {
+                      discipline: disciplinePoints,
+                      hygiene: hygienePoints,
+                      academic: academicPoints,
+                      other: otherPoints
+                    }
+                  });
+                  successCount++;
+                } else {
+                  // 学生存在但不覆盖
+                  errorCount++;
+                }
               } catch (err) {
                 errorCount++;
                 console.error(`导入学生失败: ${JSON.stringify(item)}`, err);
@@ -951,13 +1013,26 @@ const ClassDetail: React.FC = () => {
             }
           }
           
-          if (successCount > 0) {
-            message.success(`成功导入 ${successCount} 名学生${errorCount > 0 ? `，${errorCount} 名学生导入失败` : ''}`);
+          if (successCount > 0 || updatedCount > 0) {
+            const successMessage = [];
+            if (successCount > 0) {
+              successMessage.push(`新增 ${successCount} 名学生`);
+            }
+            if (updatedCount > 0) {
+              successMessage.push(`更新 ${updatedCount} 名学生`);
+            }
+            if (errorCount > 0) {
+              successMessage.push(`${errorCount} 名学生处理失败`);
+            }
+            
+            message.success(successMessage.join('，'));
             if (!USE_MOCK_DATA) {
               fetchStudents();
             }
             setImportModalVisible(false);
             setImportFile(null);
+          } else if (errorCount > 0 && !overrideExisting) {
+            message.warning('导入的学生已存在，请选择"覆盖已有学生"选项进行更新');
           } else {
             message.error('没有学生导入成功，请检查文件格式');
           }
@@ -1808,83 +1883,79 @@ const ClassDetail: React.FC = () => {
         width={700}
         destroyOnClose
       >
-        <div className="import-instructions">
-          <Text>请上传包含学生信息的Excel文件，文件需包含以下列：</Text>
-          <ul>
-            <li>学号（必填，数字）</li>
-            <li>姓名（必填，文本）</li>
-            <li>分组（选填，文本）</li>
-          </ul>
-          <Button 
-            type="link" 
-            onClick={downloadTemplate}
-            icon={<DownloadOutlined />}
+        <div className="import-container">
+          <Dragger
+            beforeUpload={(file) => {
+              // 限制文件格式
+              const isExcel = file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || 
+                              file.type === 'application/vnd.ms-excel';
+              if (!isExcel) {
+                message.error('只能上传Excel文件');
+                return Upload.LIST_IGNORE;
+              }
+              return false;
+            }}
+            onChange={handleImportFileChange}
+            fileList={importFile ? [importFile] : []}
+            accept=".xlsx,.xls"
+            maxCount={1}
           >
-            下载导入模板
-          </Button>
-        </div>
-        
-        <Dragger
-          beforeUpload={(file) => {
-            // 不自动上传，只读取文件
-            return false;
-          }}
-          onChange={handleImportFileChange}
-          fileList={importFile ? [importFile] : []}
-          accept=".xlsx,.xls"
-          maxCount={1}
-        >
-          <p className="ant-upload-drag-icon">
-            <UploadOutlined />
-          </p>
-          <p className="ant-upload-text">点击或拖拽文件到此区域上传</p>
-          <p className="ant-upload-hint">支持.xlsx, .xls格式的Excel文件</p>
-        </Dragger>
-        
-        {previewData.length > 0 && (
-          <div className="preview-container">
-            <Divider orientation="left">数据预览 (前10条)</Divider>
-            <Table
-              dataSource={previewData}
-              size="small"
-              pagination={false}
-              scroll={{ y: 200 }}
-              columns={[
-                { 
-                  title: '学号', 
-                  dataIndex: 'studentId', 
-                  key: 'studentId',
-                  render: (text, record: any) => text || record['学号'] || '-'
-                },
-                { 
-                  title: '姓名', 
-                  dataIndex: 'name', 
-                  key: 'name',
-                  render: (text, record: any) => text || record['姓名'] || '-'
-                },
-                { 
-                  title: '分组', 
-                  dataIndex: 'group', 
-                  key: 'group',
-                  render: (text, record: any) => text || record['分组'] || '-'
-                },
-              ]}
-            />
+            <p className="ant-upload-drag-icon">
+              <InboxOutlined />
+            </p>
+            <p className="ant-upload-text">点击或拖拽Excel文件到此区域</p>
+            <p className="ant-upload-hint">
+              支持 .xlsx, .xls 格式，请确保文件格式正确
+            </p>
+          </Dragger>
+          
+          {/* 添加覆盖选项 */}
+          <div style={{ marginTop: 16 }}>
+            <Checkbox 
+              checked={overrideExisting} 
+              onChange={(e) => setOverrideExisting(e.target.checked)}
+            >
+              覆盖已有学生数据（如果学号已存在）
+            </Checkbox>
           </div>
-        )}
-        
-        <div className="import-actions">
-          <Button onClick={() => setImportModalVisible(false)} style={{ marginRight: 8 }}>
-            取消
-          </Button>
-          <Button 
-            type="primary" 
-            onClick={handleImportSubmit} 
-            loading={confirmLoading}
-            disabled={!importFile}
-          >
-            导入
-          </Button>
+          
+          {previewData.length > 0 && (
+            <div className="preview-container">
+              <Divider>预览（仅显示前10条）</Divider>
+              <Table
+                columns={[
+                  { title: '学号', dataIndex: 'studentId', key: 'studentId' },
+                  { title: '姓名', dataIndex: 'name', key: 'name' },
+                  { title: '分组', dataIndex: 'group', key: 'group' },
+                  { title: '总积分', dataIndex: 'totalPoints', key: 'totalPoints' },
+                  { title: '纪律分', dataIndex: 'discipline', key: 'discipline' },
+                  { title: '卫生分', dataIndex: 'hygiene', key: 'hygiene' },
+                  { title: '学术分', dataIndex: 'academic', key: 'academic' },
+                  { title: '其他分', dataIndex: 'other', key: 'other' },
+                ]}
+                dataSource={previewData}
+                pagination={false}
+                size="small"
+                scroll={{ x: 'max-content' }}
+              />
+            </div>
+          )}
+          
+          <div className="action-buttons">
+            <Space>
+              <Button onClick={downloadTemplate}>
+                下载模板
+              </Button>
+              <Button 
+                type="primary" 
+                onClick={handleImportSubmit} 
+                loading={confirmLoading}
+                disabled={!importFile}
+              >
+                导入
+              </Button>
+            </Space>
+          </div>
         </div>
       </Modal>
 
